@@ -1,0 +1,50 @@
+IFT2425  TP1-Méthode de Newton & Fractales de Mandelbrot
+
+L'énoncé du TP1 ainsi que les programmes fournis se trouvent sur le site 
+du cours:
+
+http://www.iro.umontreal.ca/~mignotte/ift2425.html
+
+Le TP est à remettre electroniquement (avec remise) à la date specifiée dans
+le planning du cours
+ 
+Pénalité de 10% par 24h de retard.
+
+
+Vous devez fournir les programmes suivants:
+
+     [20 pts]
+      Tp-IFT2425-I.1.c
+      Affichant à l'écran la resolution de la question I.1 par la méthode de Newton
+
+     [20 pts]
+      Tp-IFT2425-I.2.c
+      Affichant à l'écran la resolution de la question I.1 par la méthode de Newton
+
+     [20 pts]
+      Tp-IFT2425-I.3.c
+      Affichant à l'écran la resolution de la question I.1 par la méthode de Newton
+     
+     [20 pts]
+      Tp-IFT2425-II.1.c
+      Affichant dans une image FractalMandelbrot_QII.1.pgm le graphe demandé
+
+     [15 pts]
+      Tp-IFT2425-II.2.c
+      Affichant dans une image FractalMandelbrot_QII.2.pgm le graphe demandé
+
+     [15 pts]
+      Tp-IFT2425-II.3.c
+      Affichant dans une image FractalMandelbrot_QII.3.pgm le graphe demandé
+
+Total: 110 points.
+
+
+Les programmes doivent compiler sous Linux avec le script fourni compilegcc.
+
+                               *****
+
+Nota: Le nom du repertoire dans lequel vous devez deposez vos fichiers
+est  TP1. Pas de rapport écrit pour ce TP.
+
+Max
