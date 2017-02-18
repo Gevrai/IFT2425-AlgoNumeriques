@@ -1,0 +1,36 @@
+IFT2425  TP2-Méthode de Jacobi -Flot Optique-
+
+L'énoncé du TP2 ainsi que les programmes fournis se trouvent sur le site 
+du cours:
+
+http://www.iro.umontreal.ca/~mignotte/ift2425.html
+
+Le TP est à remettre electroniquement (avec remise) à la date specifiée dans
+le planning du cours
+ 
+Pénalité de 10% par 24h de retard.
+
+
+Vous devez fournir les programmes suivants:
+
+     [100 pts]
+      Tp2-IFT2425-2.c
+      pour la resolution par Jacobi du système d'équation permettant d'obtenir 
+      le flot optique: réparti en :
+
+         [20 pts] pour la prog. Eq. (6)
+         [20 pts] pour la prog. Eq. (5)
+         [50 pts] pour la prog. Eq. (4) 
+         [10 pts] pour le style de programmation
+
+Total: 100 points.
+
+
+Les programmes doivent compiler sous Linux avec le script fourni compilegcc.
+
+                               *****
+
+Nota: Le nom du repertoire dans lequel vous devez deposez vos fichiers
+est  TP2. Pas de rapport écrit pour ce TP.
+
+Max
