@@ -662,13 +662,13 @@ int main(int argc,char** argv)
  //
  //-----------------------------------------------------------
  printf("\n\n Jacobi Iterations :\n");
- printf("\r  > Iteration > [%d/%d] ",0,NBITER);
+ printf("\r  > Iteration > [%d/%d] ",1,NBITER);
  fflush(stdout);
  
  //-----------------------------------------------------------
  // Equation (6): Calcul des derivees spatiales et temporelles de I 
  // On omet de calculer les pixels de contours car ceux-ci causeraient des problemes
- // d'acces et ne sont de toute facon pas utilises dans la resolution
+ // d'acces et ne seront de toute facon pas utilises dans la resolution
  //-----------------------------------------------------------
  for(i=1;i<length-1;i++) for(j=1;j<width-1;j++){
 	 Ix[i][j] = (Img1[i][j+1] - Img1[i][j] + Img1[i+1][j+1] - Img1[i+1][j]
@@ -691,7 +691,7 @@ int main(int argc,char** argv)
 
  for(k=0;k<NBITER-1;k++) { 
 	 // Barre de progres
-	 printf("\r  > Iteration > [%d/%d] ",k,NBITER);
+	 printf("\r  > Iteration > [%d/%d] ",k+2,NBITER);
 	 fflush(stdout);
 	 
 	 // Equation (5)
@@ -700,7 +700,7 @@ int main(int argc,char** argv)
 				+ (v[i-1][j-1] + v[i-1][j+1] + v[i+1][j+1] + v[i+1][j-1])/12.0;
 	 }
 
-	 // On omet les pixels de contours car negligeable et rendent
+	 // On omet les pixels de contours car negligeables et rendent
 	 // l'acces aux index difficile
 	 for(i=1;i<length-1;i++) for(j=1;j<width-1;j++) {
 
@@ -726,9 +726,9 @@ int main(int argc,char** argv)
 	 }
 	 for(j=1;j<width-1;j++) {
 		 OptFl_Vx[k][0][j] = 0.0;
-		 OptFl_Vx[k][width-1][j] = 0.0;
+		 OptFl_Vx[k][length-1][j] = 0.0;
 		 OptFl_Vy[k][0][j] = 0.0;
-		 OptFl_Vy[k][width-1][j] = 0.0;
+		 OptFl_Vy[k][length-1][j] = 0.0;
 	 }
  }
 
@@ -775,7 +775,7 @@ int main(int argc,char** argv)
       XPutImage(display,win_ppicture3,gc,x_ppicture3,0,0,0,0,
                    x_ppicture3->width,x_ppicture3->height);
 
-      //usleep(10); //si votre machine est lente mettre un nombre moins grand -> init a 1000
+      usleep(1000); //si votre machine est lente mettre un nombre moins grand
       if (k==(NBITER-1)); 
          { XDestroyImage(x_ppicture1);
            XDestroyImage(x_ppicture2); 
