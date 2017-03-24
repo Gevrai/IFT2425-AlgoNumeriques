@@ -1,0 +1,51 @@
+IFT2425  TP3-Integration & Erreurs Numérique, Suite et Chaos
+
+L'énoncé du TP3 ainsi que les programmes fournis se trouvent sur le site 
+du cours:
+
+http://www.iro.umontreal.ca/~mignotte/ift2425.html
+
+Le TP est à remettre electroniquement (avec remise) à la date specifiée dans
+le planning du cours
+ 
+Pénalité de 10% par 24h de retard.
+
+
+Vous devez fournir les programmes suivants:
+
+      [60 pts]
+      TP3-IFT2425-I.c
+      Question 1- 2-(a) et 2-(b) 
+      Afficher sur le moniteur les résultats du style:
+
+      [1>Given_Order:]  Pi=3.1334464550  Er=0.0081461986  LogEr=-2.09  
+      [2>PairwiseSum:]  Pi=3.1415925026  Er=0.0000001510  LogEr=-6.82  
+      [3>KahanSummat:]  Pi=3.1415927410  Er=0.0000000874  LogEr=-7.06  
+ 
+      [30 pts]
+      TP3-IFT2425-II.c
+      Question 3-
+      Affiche le graphe de la suite logistique.
+     
+      [20 pts]
+      TP3-IFT2425-III.c
+      Question 3-
+      Affiche à l'écran ce qui est demandé par exemple :
+
+      [0.20:>3.1415673545]
+      [0.40:>3.1411335545]
+      [0.60:>3.1411335545]
+
+         
+Total: 110 points.
+
+
+Les programmes doivent compiler sous Linux avec le script fourni compilegcc.
+Il n'y a pas de rapport écrit pour ce TP.
+
+                               *****
+
+Nota:  Pas de rapport écrit pour ce TP;
+
+
+Max

@@ -1,0 +1,4 @@
+echo 
+echo compilation du programme ${a=${1}.c}
+
+g++ -o $1 $a -lm -lX11  
