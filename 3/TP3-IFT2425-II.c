@@ -316,6 +316,9 @@ int main(int argc,char** argv)
 //--------------------------------------------------------------------------------
 //---------------- visu sous XWINDOW ---------------------------------------------
 //--------------------------------------------------------------------------------
+ //Sauvegarde
+ SaveImagePgm((char*)"",(char*)"Graphe",Graph2D,length,width); //Pour sauvegarder l'image
+
  if (flag_graph)
  {
  //ouverture session graphique
@@ -324,8 +327,6 @@ int main(int argc,char** argv)
  win_ppicture=fabrique_window(nomfen_ppicture,10,10,width,length,zoom);
  x_ppicture=cree_Ximage(Graph2D,zoom,length,width);
 
- //Sauvegarde
- //SaveImagePgm((char*)"",(char*)"Graphe",Graph2D,length,width); //Pour sauvegarder l'image
  printf("\n\n Pour quitter,appuyer sur la barre d'espace");
  fflush(stdout);
 

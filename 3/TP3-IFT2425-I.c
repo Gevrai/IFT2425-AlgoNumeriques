@@ -49,7 +49,8 @@ inline float fonction1(const float x){
 // calculant par le fait même l'erreur
 //----------------------------------------------------------
 void prettyPrint(char const* msg, const float estimate, const double realValue){
-  float error = abs(estimate - realValue);
+  float error = estimate - realValue;
+  if (error < 0.0) error *= -1.0;
   float logerr = log10(error);
   printf("[%s:]\tPi=%.10f\tEr=%.10f\tLogEr=%.2f\n",
              msg,    estimate, error,       logerr);
