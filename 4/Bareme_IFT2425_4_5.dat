@@ -1,0 +1,31 @@
+IFT2425  TP4-Equation Differentielles & Vitesse de Convergence Fractal
+
+L'énoncé du TP4 ainsi que les programmes fournis se trouvent sur le site 
+du cours:
+
+http://www.iro.umontreal.ca/~mignotte/ift2425.html
+
+Le TP est à remettre electroniquement (avec remise) à la date specifiée dans
+le planning du cours
+ 
+Pénalité de 10% par 24h de retard.
+
+
+Vous devez fournir les programmes suivants:
+
+      [70 pts]
+      TP4-IFT2425-1.c   Realisation de la Fig.4 (Question 1.)
+
+      [40 pts]
+      TP4-IFT2425-2.c   Realisation de la Fig.3 (Question 2.) 
+     
+      
+Total: 110 points.
+
+
+Les programmes doivent compiler sous Linux avec le script fourni compilegcc.
+
+                               *****
+
+
+Max
