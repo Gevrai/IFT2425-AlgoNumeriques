@@ -50,8 +50,8 @@ GC	  gc;
 /* #define X_3 +1.0/sqrt(2.0) */
 #define Y_3 -1.0/2.0
 #define C 0.25
-#define R 0.9
-#define D 0.3
+#define R 0.1
+#define D 0.1
 
 //-Valeurs initiales
 #define X_1_INI 0.2
