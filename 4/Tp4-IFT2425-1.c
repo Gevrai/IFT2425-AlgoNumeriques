@@ -50,7 +50,7 @@ GC	  gc;
 /* #define X_3 +1.0/sqrt(2.0) */
 #define Y_3 -1.0/2.0
 #define C 0.25
-#define R 0.9
+#define R 0.1
 #define D 0.3
 
 //-Valeurs initiales
@@ -366,29 +366,7 @@ void Fill_Pict(float** MatPts,float** MatPict,int PtsNumber,int NbPts)
 // FONCTIONS TPs----------------------------------
 //------------------------------------------------
 
-//   x'(t) = f(t,x,y,z) = z
-inline float f(float t, float x, float y, float z){return z;}
-
-//   z'(t) = g(t,x,y,z) = 1/R * (-z + sumx - C)
-inline float gx(float t, float x, float y, float z) {
-	return (1.0/R) *
-		( -z
-		+ ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
-		+ ((X_2-x) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
-		+ ((X_3-x) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0))
-			- C);
-}
-
-//   z'(t) = g(t,x,y,z) = 1/R * (-z + sumy - C)
-inline float gy(float t, float x, float y, float z) {
-	return (1.0/R) *
-		( -z
-		+ ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
-		+ ((Y_2-y) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
-		+ ((Y_3-y) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0))
-			- C);
-}
-
+// Util function showing a progress bar on screen, prints only when there is a change
 void showProgressBar(int current, int total, int barWidth){
 	//Don't reprint if not necessary
 	if( current !=0 && current != total-1 && current*100 % total != 0 )
@@ -410,6 +388,152 @@ void showProgressBar(int current, int total, int barWidth){
 	//Print bar
 	std::cout << "[" << bar << "] " << (int)(progress*100) << "%\r" << std::flush;
 	fflush(stdout);
+}
+
+//   x'(t) and y'(t) = f(t,x,y,z) = z
+inline double f(double t, double x, double y, double z){
+	return z;
+}
+
+//   zx'(t) = gx(t,x,y,z) = 1/R * (-zx + sumx - C)
+inline double gx(double t, double x, double y, double z) {
+	return (1.0/R) *
+		( -z
+		+ ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+		+ ((X_2-x) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
+		+ ((X_3-x) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0))
+			- C);
+}
+
+//   zx'(t) = gx(t,x,y,z) = 1/R * (-zy + sumy - C)
+inline double gy(double t, double x, double y, double z) {
+	return (1.0/R) *
+		( -z
+		+ ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+		+ ((Y_2-y) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
+		+ ((Y_3-y) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0))
+			- C);
+}
+
+/* IMPORTANT this matrix should be 2 rows of length nbIntervals
+ * MatPts[k][0] -> x axis
+ * MatPts[k][1] -> y axis
+ *
+ * This function fills the MatPts matrix with (x,y) values of the trajectory
+ * computed with the Runge-Kutta method
+ */
+void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, float** MatPts, int nbIntervals){
+
+  double kx1,kx2,kx3,kx4,kx5,kx6;
+  double ky1,ky2,ky3,ky4,ky5,ky6;
+  double lx1,lx2,lx3,lx4,lx5,lx6;
+  double ly1,ly2,ly3,ly4,ly5,ly6;
+  double tn, xn, yn, zxn, zyn;
+	double _t,_x,_y,_zx, _zy;
+
+	_x = x_init;
+	_y = y_init;
+  _zx = dx_init;
+  _zy = dy_init;
+
+  for(int i=1;i<(int)(nbIntervals);i+=1) {
+
+		showProgressBar(i, nbIntervals, 70);
+
+		// Initialize this iteration
+    tn = H * i;
+    xn = _x;
+    yn = _y;
+		zxn = _zx;
+		zyn = _zy;
+
+		// Euler test
+		if (false){
+			_x   = xn + H* f(tn,xn,yn,zxn);
+			_zx = zxn + H*gx(tn,xn,yn,zxn);
+			_y   = yn + H* f(tn,xn,yn,zyn);
+			_zy = zyn + H*gy(tn,xn,yn,zyn);
+
+			MatPts[i][0] = _x;
+			MatPts[i][1] = _y;
+			continue;
+		}
+
+		//========== K1 and L1 =================================
+    kx1 = H * f (tn,xn,yn,zxn);
+    lx1 = H * gx(tn,xn,yn,zxn);
+    ky1 = H * f (tn,xn,yn,zyn);
+    ly1 = H * gy(tn,xn,yn,zyn);
+
+		//========== K2 and L2 =================================
+		_t  =  tn + H/4.0;
+		_x  =  xn + kx1/4.0;
+		_y  =  yn + ky1/4.0;
+		_zx = zxn + lx1/4.0;
+		_zy = zyn + ly1/4.0;
+
+    kx2 = H * f(_t, _x, _y, _zx);
+    lx2 = H *gx(_t, _x, _y, _zx);
+    ky2 = H * f(_t, _x, _y, _zy);
+    ly2 = H *gy(_t, _x, _y, _zy);
+
+		//========== K3 and L3 =================================
+		_t  =  tn + H*(3.0/8.0);
+		_x  =  xn + 3.0/32.0*kx1 + 9.0/32.0*kx2;
+		_y  =  yn + 3.0/32.0*ky1 + 9.0/32.0*ky2;
+		_zx = zxn + 3.0/32.0*lx1 + 9.0/32.0*lx2;
+		_zy = zyn + 3.0/32.0*ly1 + 9.0/32.0*ly2;
+
+    kx3 = H * f(_t, _x, _y, _zx);
+    lx3 = H *gx(_t, _x, _y, _zx);
+    ky3 = H * f(_t, _x, _y, _zy);
+    ly3 = H *gy(_t, _x, _y, _zy);
+
+		//========== K4 and L4 =================================
+		_t  =  tn + H*(12.0/13.0);
+		_x  =  xn + 1932.0/2197.0*kx1 - 7200.0/2197.0*kx2 + 7296.0/2197.0*kx3;
+		_y  =  yn + 1932.0/2197.0*ky1 - 7200.0/2197.0*ky2 + 7296.0/2197.0*ky3;
+		_zx = zxn + 1932.0/2197.0*lx1 - 7200.0/2197.0*lx2 + 7296.0/2197.0*lx3;
+		_zy = zyn + 1932.0/2197.0*ly1 - 7200.0/2197.0*ly2 + 7296.0/2197.0*ly3;
+
+    kx4 = H * f(_t, _x, _y, _zx);
+    lx4 = H *gx(_t, _x, _y, _zx);
+    ky4 = H * f(_t, _x, _y, _zy);
+    ly4 = H *gy(_t, _x, _y, _zy);
+
+		//========== K5 and L5 =================================
+		_t  =  tn + H;
+		_x  =  xn + 439.0/216.0*kx1 - 8.0*kx2 + 3680.0/513.0*kx3 - 845.0/4104.0*kx4;
+		_y  =  yn + 439.0/216.0*ky1 - 8.0*ky2 + 3680.0/513.0*ky3 - 845.0/4104.0*ky4;
+		_zx = zxn + 439.0/216.0*lx1 - 8.0*lx2 + 3680.0/513.0*lx3 - 845.0/4104.0*lx4;
+		_zy = zyn + 439.0/216.0*ly1 - 8.0*ly2 + 3680.0/513.0*ly3 - 845.0/4104.0*ly4;
+
+    kx5 = H * f(_t, _x, _y, _zx);
+    lx5 = H *gx(_t, _x, _y, _zx);
+    ky5 = H * f(_t, _x, _y, _zy);
+    ly5 = H *gy(_t, _x, _y, _zy);
+
+		//========== K6 and L6 =================================
+		_t  =  tn + H/2.0;
+		_x  =  xn - 8.0/27.0*kx1 + 2.0*kx2 - 3544.0/2565.0*kx3 + 1859.0/4104.0*kx4 - 11.0/40.0*kx5;
+		_y  =  yn - 8.0/27.0*ky1 + 2.0*ky2 - 3544.0/2565.0*ky3 + 1859.0/4104.0*ky4 - 11.0/40.0*ky5;
+		_zx = zxn - 8.0/27.0*lx1 + 2.0*lx2 - 3544.0/2565.0*lx3 + 1859.0/4104.0*lx4 - 11.0/40.0*lx5;
+		_zy = zxn - 8.0/27.0*ly1 + 2.0*ly2 - 3544.0/2565.0*ly3 + 1859.0/4104.0*ly4 - 11.0/40.0*ly5;
+
+    kx6 = H * f(_t, _x, _y, _zx);
+    lx6 = H *gx(_t, _x, _y, _zx);
+    ky6 = H * f(_t, _x, _y, _zy);
+    ly6 = H *gy(_t, _x, _y, _zy);
+
+		//========== Results for this iteration ==========
+    _x  =  xn + (16.0/135.0*kx1 + 6656.0/12825.0*kx3 + 28561.0/56430.0*kx4 - 9.0/50.0*kx5 + 2.0/55.0*kx6);
+    _zx = zxn + (16.0/135.0*lx1 + 6656.0/12825.0*lx3 + 28561.0/56430.0*lx4 - 9.0/50.0*lx5 + 2.0/55.0*lx6);
+    _y  =  yn + (16.0/135.0*ky1 + 6656.0/12825.0*ky3 + 28561.0/56430.0*ky4 - 9.0/50.0*ky5 + 2.0/55.0*ky6);
+    _zy = zyn + (16.0/135.0*ly1 + 6656.0/12825.0*ly3 + 28561.0/56430.0*ly4 - 9.0/50.0*ly5 + 2.0/55.0*ly6);
+
+		MatPts[i][0] = _x;
+		MatPts[i][1] = _y;
+  }
 }
 
 //----------------------------------------------------------
@@ -443,20 +567,18 @@ int main (int argc, char **argv)
   //---------------------------------------------------------------------
   //>Question 1
   //---------------------------------------------------------------------
-  // Résolution de l'équation différentielle d'ordre 2 selon
-  //   x'(t) = f(t, x(t), y(t), z(t))
-  //   z'(t) = g(t, x(t), y(t), z(t))
-  // qui devient ainsi
-  //   x'(t) = f(t,x,y,z) = z
-  //   z'(t) = g(t,x,y,z) = 1/R * (-z + sum - C)
 
-	//> Runge-Kutta variables
-  float kx1,kx2,kx3,kx4,kx5,kx6;
-  float ky1,ky2,ky3,ky4,ky5,ky6;
-  float lx1,lx2,lx3,lx4,lx5,lx6;
-  float ly1,ly2,ly3,ly4,ly5,ly6;
-  float tn, xn, yn, zxn, zyn;
-	float _t,_x,_y,_zx, _zy;
+  /* Résolution de l'équation différentielle d'ordre 2 selon Runge-Kutta
+  *   x'(t)  = f(t, x(t), y(t), zx(t))
+  *   zx'(t) = gx(t, x(t), y(t), zx(t))
+  *   y'(t)  = f(t, x(t), y(t), zy(t))
+  *   zy'(t) = gy(t, x(t), y(t), zy(t))
+  * qui devient ainsi
+  *   x'(t)  =  f(t,x,y,zx) = z
+  *   zx'(t) = gx(t,x,y,zx) = 1/R * (-zx + sum - C)
+  *   x'(t)  =  f(t,x,y,zy) = z
+  *   zy'(t) = gy(t,x,y,zy) = 1/R * (-zy + sum - C)
+	*/
 
 	// Print values of model
 	std::cout << "C = " << C << "\t";
@@ -468,112 +590,7 @@ int main (int argc, char **argv)
 	std::cout << "\nTime interval in seconds : [" << T_0 << "," << T_F << "]\n";
 	std::cout << "with " << (int)NB_INTERV << " intervals (h=" << H << ")\n\n";
 
-  // MatPts[k][0] -> x axis & MatPts[k][1] -> y axis
-	_x = X_1_INI;
-	_y = Y_1_INI;
-  _zx = 0.0;
-  _zy = 0.0;
-
-  for(i=1;i<(int)(NB_INTERV);i+=1) {
-
-		showProgressBar(i, NB_INTERV, 70);
-
-		// Initialize this iteration
-    tn = H * i;
-    xn = _x;
-    yn = _y;
-		zxn = _zx;
-		zyn = _zy;
-
-		// Euler test
-		if (false){
-			_x   = xn + H* f(tn,xn,yn,zxn);
-			_zx = zxn + H*gx(tn,xn,yn,zxn);
-			_y   = yn + H* f(tn,xn,yn,zyn);
-			_zy = zyn + H*gy(tn,xn,yn,zyn);
-
-			MatPts[i][0] = _x;
-			MatPts[i][1] = _y;
-			continue;
-		}
-
-		// K1 and L1 =================================
-    kx1 = H * f (tn,xn,yn,zxn);
-    lx1 = H * gx(tn,xn,yn,zxn);
-    ky1 = H * f (tn,xn,yn,zyn);
-    ly1 = H * gy(tn,xn,yn,zyn);
-
-		// K2 and L2 =================================
-		_t  =  tn + H/4.0;
-		_x  =  xn + kx1/4.0;
-		_y  =  yn + ky1/4.0;
-		_zx = zxn + lx1/4.0;
-		_zy = zyn + ly1/4.0;
-
-    kx2 = H * f(_t, _x, _y, _zx);
-    lx2 = H *gx(_t, _x, _y, _zx);
-    ky2 = H * f(_t, _x, _y, _zy);
-    ly2 = H *gy(_t, _x, _y, _zy);
-
-		// K3 and L3 =================================
-		_t  =  tn + H*(3.0/8.0);
-		_x  =  xn + 3.0/32.0*kx1 + 9.0/32.0*kx2;
-		_y  =  yn + 3.0/32.0*ky1 + 9.0/32.0*ky2;
-		_zx = zxn + 3.0/32.0*lx1 + 9.0/32.0*lx2;
-		_zy = zyn + 3.0/32.0*ly1 + 9.0/32.0*ly2;
-
-    kx3 = H * f(_t, _x, _y, _zx);
-    lx3 = H *gx(_t, _x, _y, _zx);
-    ky3 = H * f(_t, _x, _y, _zy);
-    ly3 = H *gy(_t, _x, _y, _zy);
-
-		// K4 and L4 =================================
-		_t  =  tn + H*(12.0/13.0);
-		_x  =  xn + 1932.0/2197.0*kx1 - 7200.0/2197.0*kx2 + 7296.0/2197.0*kx3;
-		_y  =  yn + 1932.0/2197.0*ky1 - 7200.0/2197.0*ky2 + 7296.0/2197.0*ky3;
-		_zx = zxn + 1932.0/2197.0*lx1 - 7200.0/2197.0*lx2 + 7296.0/2197.0*lx3;
-		_zy = zyn + 1932.0/2197.0*ly1 - 7200.0/2197.0*ly2 + 7296.0/2197.0*ly3;
-
-    kx4 = H * f(_t, _x, _y, _zx);
-    lx4 = H *gx(_t, _x, _y, _zx);
-    ky4 = H * f(_t, _x, _y, _zy);
-    ly4 = H *gy(_t, _x, _y, _zy);
-
-		// K5 and L5 =================================
-		_t  =  tn + H;
-		_x  =  xn + 439.0/216.0*kx1 - 8.0*kx2 + 3680.0/513.0*kx3 - 845.0/4104.0*kx4;
-		_y  =  yn + 439.0/216.0*ky1 - 8.0*ky2 + 3680.0/513.0*ky3 - 845.0/4104.0*ky4;
-		_zx = zxn + 439.0/216.0*lx1 - 8.0*lx2 + 3680.0/513.0*lx3 - 845.0/4104.0*lx4;
-		_zy = zyn + 439.0/216.0*ly1 - 8.0*ly2 + 3680.0/513.0*ly3 - 845.0/4104.0*ly4;
-
-    kx5 = H * f(_t, _x, _y, _zx);
-    lx5 = H *gx(_t, _x, _y, _zx);
-    ky5 = H * f(_t, _x, _y, _zy);
-    ly5 = H *gy(_t, _x, _y, _zy);
-
-		// K6 and L6 =================================
-		_t  =  tn + H/2.0;
-		_x  =  xn - 8.0/27.0*kx1 + 2.0*kx2 - 3544.0/2565.0*kx3 + 1859.0/4104.0*kx4 - 11.0/40.0*kx5;
-		_y  =  yn - 8.0/27.0*ky1 + 2.0*ky2 - 3544.0/2565.0*ky3 + 1859.0/4104.0*ky4 - 11.0/40.0*ky5;
-		_zx = zxn - 8.0/27.0*lx1 + 2.0*lx2 - 3544.0/2565.0*lx3 + 1859.0/4104.0*lx4 - 11.0/40.0*lx5;
-		_zy = zxn - 8.0/27.0*ly1 + 2.0*ly2 - 3544.0/2565.0*ly3 + 1859.0/4104.0*ly4 - 11.0/40.0*ly5;
-
-    kx6 = H * f(_t, _x, _y, _zx);
-    lx6 = H *gx(_t, _x, _y, _zx);
-    ky6 = H * f(_t, _x, _y, _zy);
-    ly6 = H *gy(_t, _x, _y, _zy);
-
-		// Results for this iteration
-    _x  =  xn + (16.0/135.0*kx1 + 6656.0/12825.0*kx3 + 28561.0/56430.0*kx4 - 9.0/50.0*kx5 + 2.0/55.0*kx6);
-    _zx = zxn + (16.0/135.0*lx1 + 6656.0/12825.0*lx3 + 28561.0/56430.0*lx4 - 9.0/50.0*lx5 + 2.0/55.0*lx6);
-    _y  =  yn + (16.0/135.0*ky1 + 6656.0/12825.0*ky3 + 28561.0/56430.0*ky4 - 9.0/50.0*ky5 + 2.0/55.0*ky6);
-    _zy = zyn + (16.0/135.0*ly1 + 6656.0/12825.0*ly3 + 28561.0/56430.0*ly4 - 9.0/50.0*ly5 + 2.0/55.0*ly6);
-
-		MatPts[i][0] = _x;
-		MatPts[i][1] = _y;
-		/* printf("(%f,%f)\n",MatPts[i][0],MatPts[i][1]); */
-
-  }
+	int nbIterations = RungeKutta(X_1_INI, 0.0, Y_1_INI, 0.0, MatPts, NB_INTERV);
 
   //--Fin Question 1-----------------------------------------------------
 
