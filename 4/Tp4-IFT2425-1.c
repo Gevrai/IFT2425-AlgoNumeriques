@@ -85,10 +85,10 @@ GC	  gc;
 //------------------------------------------------
 // GLOBAL CST ------------------------------------
 //------------------------------------------------
-float Xmin=0.0;
-float Xmax=0.0;
-float Ymin=0.0;
-float Ymax=0.0;
+float Xmin=-(MAX_X/2.0);
+float Xmax=+(MAX_X/2.0);
+float Ymin=-(MAX_Y/2.0);
+float Ymax=+(MAX_Y/2.0);
 
 float xx_1=((WIDTH/MAX_X)*X_1)+(WIDTH/2);
 float yy_1=(-(HEIGHT/MAX_Y)*Y_1)+(HEIGHT/2);
@@ -590,7 +590,7 @@ int main (int argc, char **argv)
 	std::cout << "\nTime interval in seconds : [" << T_0 << "," << T_F << "]\n";
 	std::cout << "with " << (int)NB_INTERV << " intervals (h=" << H << ")\n\n";
 
-	int nbIterations = RungeKutta(X_1_INI, 0.0, Y_1_INI, 0.0, MatPts, NB_INTERV);
+	RungeKutta(X_1_INI, 0.0, Y_1_INI, 0.0, MatPts, NB_INTERV);
 
   //--Fin Question 1-----------------------------------------------------
 
