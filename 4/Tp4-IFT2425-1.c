@@ -580,13 +580,14 @@ int main (int argc, char **argv)
   *   y'(t)  =  f(t,x,y,zy) = zy
 	*/
 
+	//> Initial value of run
 	float x_init = X_1_INI;
 	float y_init = Y_1_INI;
 	float dx_init = 0.0;
 	float dy_init = 0.0;
 
 	// Print values of model
-	std::cout << "C = " << C << "\t";
+	std::cout << "\nC = " << C << "\t";
 	std::cout << "R = " << R << "\t";
 	std::cout << "D = " << D << "\n";
 	std::cout << "Magnet 1 at (" << X_1 << "," << Y_1 << ")\n";
@@ -594,10 +595,10 @@ int main (int argc, char **argv)
 	std::cout << "Magnet 3 at (" << X_3 << "," << Y_3 << ")\n";
 	std::cout << "\nTime interval in seconds : [" << T_0 << "," << T_F << "]\n";
 	std::cout << "with " << (int)NB_INTERV << " intervals (h=" << H << ")\n\n";
-
 	std::cout << "Initial position (" << x_init << "," << y_init << ")";
 	std::cout << "\nwith velocity (" << dx_init << "," << dy_init << "\n";
 
+	// The meat!
 	RungeKutta(x_init, dx_init, y_init, dy_init, MatPts, NB_INTERV);
 
   //--Fin Question 1-----------------------------------------------------
