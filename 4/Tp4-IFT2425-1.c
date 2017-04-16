@@ -580,6 +580,11 @@ int main (int argc, char **argv)
   *   y'(t)  =  f(t,x,y,zy) = zy
 	*/
 
+	float x_init = X_1_INI;
+	float y_init = Y_1_INI;
+	float dx_init = 0.0;
+	float dy_init = 0.0;
+
 	// Print values of model
 	std::cout << "C = " << C << "\t";
 	std::cout << "R = " << R << "\t";
@@ -590,7 +595,10 @@ int main (int argc, char **argv)
 	std::cout << "\nTime interval in seconds : [" << T_0 << "," << T_F << "]\n";
 	std::cout << "with " << (int)NB_INTERV << " intervals (h=" << H << ")\n\n";
 
-	RungeKutta(X_1_INI, 0.0, Y_1_INI, 0.0, MatPts, NB_INTERV);
+	std::cout << "Initial position (" << x_init << "," << y_init << ")";
+	std::cout << "\nwith velocity (" << dx_init << "," << dy_init << "\n";
+
+	RungeKutta(x_init, dx_init, y_init, dy_init, MatPts, NB_INTERV);
 
   //--Fin Question 1-----------------------------------------------------
 
