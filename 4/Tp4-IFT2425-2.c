@@ -527,14 +527,14 @@ inline float gy(float t, float x, float y, float z) {
 	return (-R*z + sum - C*y);
 }
 
-inline bool isCloseToAMagnet(float x, float y, float distanceMax){
+inline int isCloseToAMagnet(float x, float y, float distanceMax){
 	if (sqrt(CARRE(X_1-x) + CARRE(Y_1-y)) < distanceMax)
-			return true;
+			return 1;
 	if (sqrt(CARRE(X_2-x) + CARRE(Y_2-y)) < distanceMax)
-		return true;
+		return 2;
 	if (sqrt(CARRE(X_3-x) + CARRE(Y_3-y)) < distanceMax)
-		return true;
-	return false;
+		return 3;
+	return 0;
 }
 
 /* IMPORTANT this matrix should be 2 rows of length nbIntervals
@@ -546,7 +546,7 @@ inline bool isCloseToAMagnet(float x, float y, float distanceMax){
  */
 int RungeKutta(float x_init, float dx_init, float y_init, float dy_init, int nbIntervals){
 
-	const float distance_forConvergence = 0.05;
+	const float distance_forConvergence = 0.5;
 	const int nbIntervals_forConvergence = 20;
 	int counter_forConvergence = 0;
 
@@ -643,9 +643,12 @@ int RungeKutta(float x_init, float dx_init, float y_init, float dy_init, int nbI
     _y  =  yn + (16.0/135.0*ky1 + 6656.0/12825.0*ky3 + 28561.0/56430.0*ky4 - 9.0/50.0*ky5 + 2.0/55.0*ky6);
     _zy = zyn + (16.0/135.0*ly1 + 6656.0/12825.0*ly3 + 28561.0/56430.0*ly4 - 9.0/50.0*ly5 + 2.0/55.0*ly6);
 
-		if(isCloseToAMagnet(_x, _y, distance_forConvergence)){
+		if(int magnet = isCloseToAMagnet(_x, _y, distance_forConvergence)){
 			counter_forConvergence++;
 			if(counter_forConvergence >= nbIntervals_forConvergence){
+				// For magnet we landed on -> 1,2 or 3
+				/* return magnet; */
+				// For nb of iterations for convergence
 				return i;
 			}
 		} else counter_forConvergence = 0;
@@ -690,10 +693,20 @@ int main (int argc, char **argv)
 
 			float x = Xmin + (float)j/WIDTH * (Xmax - Xmin);
 			float y = Ymax - (float)i/HEIGHT * (Ymax - Ymin);
-			float color = (float)RungeKutta(x,0.0,y,0.0,NB_INTERV)*255/NB_INTERV;
-			MatPict[0][i][j]=color;
-			MatPict[1][i][j]=color;
-			MatPict[2][i][j]=color;
+			// Shade between 0 and 255
+			/* float color = (float)RungeKutta(x,0.0,y,0.0,NB_INTERV)/NB_INTERV * 255.0; */
+			/* // GREY FOR LIFE */
+			/* MatPict[0][i][j]=color; */
+			/* MatPict[1][i][j]=color; */
+			/* MatPict[2][i][j]=color; */
+
+			int magnet = RungeKutta(x,0.0,y,0.0,NB_INTERV);
+			if(magnet == 1)
+				MatPict[0][i][j]=255;
+			if(magnet == 2)
+				MatPict[1][i][j]=255;
+			if(magnet == 3)
+				MatPict[2][i][j]=255;
 		}
 
 
