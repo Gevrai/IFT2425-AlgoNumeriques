@@ -367,14 +367,18 @@ void Fill_Pict(float** MatPts,float** MatPict,int PtsNumber,int NbPts)
 //------------------------------------------------
 
 // Util function showing a progress bar on screen, prints only when there is a change
+int lastProgress = -1;
+void resetProgressBar(){lastProgress = -1;}
+
 void showProgressBar(int current, int total, int barWidth){
+	float progress = (float)current/(float)(total-1);
 	//Don't reprint if not necessary
-	if( current !=0 && current != total-1 && current*100 % total != 0 )
+	if (lastProgress == (int)(progress*100))
 		return;
+	else
+		lastProgress = (int)(progress*100);
 
 	std::string bar;
-	float progress = (float)current/(float)(total-1);
-
 	int i = 0;
 	// Progress filed with =
 	for (i = 0; i < (int)(barWidth*progress); ++i)
@@ -391,28 +395,24 @@ void showProgressBar(int current, int total, int barWidth){
 }
 
 //   x'(t) and y'(t) = f(t,x,y,z) = z
-inline double f(double t, double x, double y, double z){
+inline float f(float t, float x, float y, float z){
 	return z;
 }
 
-//   zx'(t) = gx(t,x,y,z) = 1/R * (-zx + sumx - C)
-inline double gx(double t, double x, double y, double z) {
-	return (1.0/R) *
-		( -z
-		+ ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+//   zx'(t) = gx(t,x,y,z) = -R*zx + sum(x) - C*x
+inline float gx(float t, float x, float y, float z) {
+	float sum = ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((X_2-x) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
-		+ ((X_3-x) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0))
-			- C);
+		+ ((X_3-x) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
+	return (-R*z + sum - C*x);
 }
 
-//   zx'(t) = gx(t,x,y,z) = 1/R * (-zy + sumy - C)
-inline double gy(double t, double x, double y, double z) {
-	return (1.0/R) *
-		( -z
-		+ ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+//   zy'(t) = gy(t,x,y,z) = -R*zy + sum(y) - C*y
+inline float gy(float t, float x, float y, float z) {
+	float sum = ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((Y_2-y) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
-		+ ((Y_3-y) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0))
-			- C);
+		+ ((Y_3-y) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
+	return (-R*z + sum - C*y);
 }
 
 /* IMPORTANT this matrix should be 2 rows of length nbIntervals
@@ -422,14 +422,14 @@ inline double gy(double t, double x, double y, double z) {
  * This function fills the MatPts matrix with (x,y) values of the trajectory
  * computed with the Runge-Kutta method
  */
-void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, float** MatPts, int nbIntervals){
+void RungeKutta(float x_init, float dx_init, float y_init, float dy_init, float** MatPts, int nbIntervals){
 
-  double kx1,kx2,kx3,kx4,kx5,kx6;
-  double ky1,ky2,ky3,ky4,ky5,ky6;
-  double lx1,lx2,lx3,lx4,lx5,lx6;
-  double ly1,ly2,ly3,ly4,ly5,ly6;
-  double tn, xn, yn, zxn, zyn;
-	double _t,_x,_y,_zx, _zy;
+  float kx1,kx2,kx3,kx4,kx5,kx6;
+  float ky1,ky2,ky3,ky4,ky5,ky6;
+  float lx1,lx2,lx3,lx4,lx5,lx6;
+  float ly1,ly2,ly3,ly4,ly5,ly6;
+  float tn, xn, yn, zxn, zyn;
+	float _t,_x,_y,_zx, _zy;
 
 	_x = x_init;
 	_y = y_init;
@@ -448,7 +448,7 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 		zyn = _zy;
 
 		// Euler test
-		if (false){
+		if (true){
 			_x   = xn + H* f(tn,xn,yn,zxn);
 			_zx = zxn + H*gx(tn,xn,yn,zxn);
 			_y   = yn + H* f(tn,xn,yn,zyn);
@@ -574,10 +574,10 @@ int main (int argc, char **argv)
   *   y'(t)  = f(t, x(t), y(t), zy(t))
   *   zy'(t) = gy(t, x(t), y(t), zy(t))
   * qui devient ainsi
-  *   x'(t)  =  f(t,x,y,zx) = z
-  *   zx'(t) = gx(t,x,y,zx) = 1/R * (-zx + sum - C)
-  *   x'(t)  =  f(t,x,y,zy) = z
-  *   zy'(t) = gy(t,x,y,zy) = 1/R * (-zy + sum - C)
+  *   zx'(t) = gx(t,x,y,zx) = 1/R * (-zx + sum - Cx)
+  *   x'(t)  =  f(t,x,y,zx) = zx
+  *   zy'(t) = gy(t,x,y,zy) = 1/R * (-zy + sum - Cy)
+  *   y'(t)  =  f(t,x,y,zy) = zy
 	*/
 
 	// Print values of model
