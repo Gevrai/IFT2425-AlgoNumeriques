@@ -48,7 +48,8 @@ GC	  gc;
 #define Y_1 1.0
 #define X_2 -1.0/sqrt(2.0)
 #define Y_2 -1.0/2.0
-#define X_3 +1.0/2*sqrt(2.0)
+#define X_3 +1.0/sqrt(2.0)
+/* #define X_3 +1.0/2*sqrt(2.0) */
 #define Y_3 -1.0/2.0
 
 #define C 0.25
@@ -59,12 +60,13 @@ GC	  gc;
 //-Cst-Runge-Kutta
 #define H            0.1
 #define T_0          0.0
-#define T_F          20.0
+#define T_F          25.0
+/* #define T_F          20.0 */
 #define NB_INTERV (T_F-T_0)/H
 
  //-Cst-Image
-#define WIDTH  256
-#define HEIGHT 256
+#define WIDTH  128
+#define HEIGHT 128
 #define MAX_X  4.0
 #define MAX_Y  4.0
 #define EVOL_GRAPH 3000
@@ -506,28 +508,34 @@ void showProgressBar(int current, int total, int barWidth){
 	fflush(stdout);
 }
 
+// Recalibrate the image in MatPict between new min/max values (normally 0..255)
+void recalibrateImgRGB(float imgMin, float imgMax, float newMin, float newMax, float*** MatPict){
+	for(int i=0;i<HEIGHT;i++) for(int j=0;j<WIDTH;j++) for (int k=0;k<3;k++)
+				MatPict[k][i][j] = newMin + (newMax-newMin) * (MatPict[k][i][j]-imgMin)/(imgMax-imgMin);
+}
+
 //   x'(t) and y'(t) = f(t,x,y,z) = z
-inline float f(float t, float x, float y, float z){
+inline double f(double t, double x, double y, double z){
 	return z;
 }
 
 //   zx'(t) = gx(t,x,y,z) = -R*zx + sum(x) - C*x
-inline float gx(float t, float x, float y, float z) {
-	float sum = ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+inline double gx(double t, double x, double y, double z) {
+	double sum = ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((X_2-x) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
 		+ ((X_3-x) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
 	return (-R*z + sum - C*x);
 }
 
 //   zy'(t) = gy(t,x,y,z) = -R*zy + sum(y) - C*y
-inline float gy(float t, float x, float y, float z) {
-	float sum = ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+inline double gy(double t, double x, double y, double z) {
+	double sum = ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((Y_2-y) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
 		+ ((Y_3-y) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
 	return (-R*z + sum - C*y);
 }
 
-inline int isCloseToAMagnet(float x, float y, float distanceMax){
+inline int isCloseToAMagnet(double x, double y, double distanceMax){
 	if (sqrt(CARRE(X_1-x) + CARRE(Y_1-y)) < distanceMax)
 			return 1;
 	if (sqrt(CARRE(X_2-x) + CARRE(Y_2-y)) < distanceMax)
@@ -544,18 +552,18 @@ inline int isCloseToAMagnet(float x, float y, float distanceMax){
  * This function fills the MatPts matrix with (x,y) values of the trajectory
  * computed with the Runge-Kutta method
  */
-int RungeKutta(float x_init, float dx_init, float y_init, float dy_init, int nbIntervals){
+int RungeKutta(double x_init, double dx_init, double y_init, double dy_init, int nbIntervals, bool returnNumberOfIterations){
 
-	const float distance_forConvergence = 0.5;
+	const double distance_forConvergence = 0.5;
 	const int nbIntervals_forConvergence = 20;
 	int counter_forConvergence = 0;
 
-  float kx1,kx2,kx3,kx4,kx5,kx6;
-  float ky1,ky2,ky3,ky4,ky5,ky6;
-  float lx1,lx2,lx3,lx4,lx5,lx6;
-  float ly1,ly2,ly3,ly4,ly5,ly6;
-  float tn, xn, yn, zxn, zyn;
-	float _t,_x,_y,_zx, _zy;
+  double kx1,kx2,kx3,kx4,kx5,kx6;
+  double ky1,ky2,ky3,ky4,ky5,ky6;
+  double lx1,lx2,lx3,lx4,lx5,lx6;
+  double ly1,ly2,ly3,ly4,ly5,ly6;
+  double tn, xn, yn, zxn, zyn;
+	double _t,_x,_y,_zx, _zy;
 
 	_x = x_init;
 	_y = y_init;
@@ -646,14 +654,15 @@ int RungeKutta(float x_init, float dx_init, float y_init, float dy_init, int nbI
 		if(int magnet = isCloseToAMagnet(_x, _y, distance_forConvergence)){
 			counter_forConvergence++;
 			if(counter_forConvergence >= nbIntervals_forConvergence){
+				// For nb of iterations needed for convergence
+				if (returnNumberOfIterations) return i;
 				// For magnet we landed on -> 1,2 or 3
-				/* return magnet; */
-				// For nb of iterations for convergence
-				return i;
+				else return magnet;
 			}
 		} else counter_forConvergence = 0;
   }
-	return nbIntervals;
+	if (returnNumberOfIterations) return nbIntervals;
+	else return 0;
 }
 
 //----------------------------------------------------------
@@ -688,26 +697,52 @@ int main (int argc, char **argv)
   //>Question 2
   //---------------------------------------------------------------------
 
-  for(i=0;i<HEIGHT;i++) for(j=0;j<WIDTH;j++) {
+	// true for image asked in assignment, false for colorized attraction field
+	bool showConvergenceSpeed = true;
+
+	// Variables for image recalibration
+	float min = MatPict[0][0][0];
+	float max = MatPict[0][0][0];
+
+  for(i=0;i<HEIGHT;i++){
+		for(j=0;j<WIDTH;j++) {
 			showProgressBar(i*HEIGHT + j, WIDTH*HEIGHT, 70);
 
+			// Current x and y
 			float x = Xmin + (float)j/WIDTH * (Xmax - Xmin);
 			float y = Ymax - (float)i/HEIGHT * (Ymax - Ymin);
-			// Shade between 0 and 255
-			/* float color = (float)RungeKutta(x,0.0,y,0.0,NB_INTERV)/NB_INTERV * 255.0; */
-			/* // GREY FOR LIFE */
-			/* MatPict[0][i][j]=color; */
-			/* MatPict[1][i][j]=color; */
-			/* MatPict[2][i][j]=color; */
 
-			int magnet = RungeKutta(x,0.0,y,0.0,NB_INTERV);
-			if(magnet == 1)
-				MatPict[0][i][j]=255;
-			if(magnet == 2)
-				MatPict[1][i][j]=255;
-			if(magnet == 3)
-				MatPict[2][i][j]=255;
+			// Image de la vitesse de convergence, version demandee dans l'enonce
+			if (showConvergenceSpeed){
+				// Shade between 0 and 255, with 0 being a fast convergence
+				int nbinterv = RungeKutta(x,0.0,y,0.0,NB_INTERV,showConvergenceSpeed);
+				float value = (float)nbinterv;
+				MatPict[0][i][j]=value;
+				MatPict[1][i][j]=value;
+				MatPict[2][i][j]=value;
+				// For calibration
+				if (value > max)
+					max = value;
+				if (value < min)
+					min = value;
+			}
+
+			// Image des bassins d'attraction
+			else {
+				int magnet = RungeKutta(x,0.0,y,0.0,NB_INTERV, showConvergenceSpeed);
+				if(magnet == 1)
+					MatPict[0][i][j]=255;
+				if(magnet == 2)
+					MatPict[1][i][j]=255;
+				if(magnet == 3)
+					MatPict[2][i][j]=255;
+			}
 		}
+	}
+
+	// Image recalibration
+	if (showConvergenceSpeed)
+		recalibrateImgRGB(min, max, 0.0, 255.0, MatPict);
 
 
    //--Fin Question 2-----------------------------------------------------
