@@ -36,7 +36,7 @@ GC	  gc;
 // DEFINITIONS -----------------------------------
 //------------------------------------------------
 /* #define CARRE(X) ((X)*(X)) */
-#define CARRE(X) (pow((X),2))
+#define CARRE(X) (pow((X),2)) //This is faster 99% of the time
 
 #define OUTPUT_FILE "Tp4-Img-II"
 #define VIEW_PGM    "xv"
