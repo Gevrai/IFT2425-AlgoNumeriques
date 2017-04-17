@@ -1,0 +1,15 @@
+Bonjour,
+
+Pour la partie II du devoir je vous ai remis deux images d'exemples
+de 512x512 et 1024x1024, mais le fichier .c remis 
+
+Veuillez noter que les points noirs dans l'image 'bassins512x512.ppm'
+sont simplement des points où la trajectoire n'a pas convergé.
+
+Aussi, puisque 'compilegcc' compile avec g++, j'ai effectivement utilisé
+certaine fonctions de c++.
+
+
+Merci et bon été!
+Gevrai Jodoin-Tremblay
+gevrai.jodoin-tremblay@umontreal.ca
