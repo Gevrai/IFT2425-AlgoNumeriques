@@ -35,7 +35,8 @@ GC	  gc;
 //------------------------------------------------
 // DEFINITIONS -----------------------------------
 //------------------------------------------------
-#define CARRE(X) ((X)*(X))
+/* #define CARRE(X) ((X)*(X)) */
+#define CARRE(X) (pow((X),2.0))
 
 #define OUTPUT_FILE "Tp4-Img-I.pgm"
 #define VIEW_PGM    "xv"
@@ -372,7 +373,7 @@ void resetProgressBar(){lastProgress = -1;}
 
 void showProgressBar(int current, int total, int barWidth){
 	float progress = (float)current/(float)(total-1);
-	//Don't reprint if not necessary
+	// Don't reprint if not necessary
 	if (lastProgress == (int)(progress*100))
 		return;
 	else
@@ -395,21 +396,21 @@ void showProgressBar(int current, int total, int barWidth){
 }
 
 //   x'(t) and y'(t) = f(t,x,y,z) = z
-inline double f(double t, double x, double y, double z){
+inline float f(float t, float x, float y, float z){
 	return z;
 }
 
 //   zx'(t) = gx(t,x,y,z) = -R*zx + sum(x) - C*x
-inline double gx(double t, double x, double y, double z) {
-	double sum = ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+inline float gx(float t, float x, float y, float z) {
+	float sum = ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((X_2-x) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
 		+ ((X_3-x) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
 	return (-R*z + sum - C*x);
 }
 
 //   zy'(t) = gy(t,x,y,z) = -R*zy + sum(y) - C*y
-inline double gy(double t, double x, double y, double z) {
-	double sum = ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+inline float gy(float t, float x, float y, float z) {
+	float sum = ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((Y_2-y) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
 		+ ((Y_3-y) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
 	return (-R*z + sum - C*y);
@@ -422,21 +423,21 @@ inline double gy(double t, double x, double y, double z) {
  * This function fills the MatPts matrix with (x,y) values of the trajectory
  * computed with the Runge-Kutta method
  */
-void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, float** MatPts, int nbIntervals){
+void RungeKutta(float x_init, float dx_init, float y_init, float dy_init, float** MatPts, int nbIntervals){
 
-  double kx1,kx2,kx3,kx4,kx5,kx6;
-  double ky1,ky2,ky3,ky4,ky5,ky6;
-  double lx1,lx2,lx3,lx4,lx5,lx6;
-  double ly1,ly2,ly3,ly4,ly5,ly6;
-  double tn, xn, yn, zxn, zyn;
-	double _t,_x,_y,_zx, _zy;
+  float kx1,kx2,kx3,kx4,kx5,kx6;
+  float ky1,ky2,ky3,ky4,ky5,ky6;
+  float lx1,lx2,lx3,lx4,lx5,lx6;
+  float ly1,ly2,ly3,ly4,ly5,ly6;
+  float tn, xn, yn, zxn, zyn;
+	float _t,_x,_y,_zx, _zy;
 
 	_x = x_init;
 	_y = y_init;
   _zx = dx_init;
   _zy = dy_init;
 
-  for(int i=1;i<(int)(nbIntervals);i+=1) {
+  for(int i=1;i<nbIntervals;i+=1) {
 
 		showProgressBar(i, nbIntervals, 70);
 
@@ -447,7 +448,7 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 		zxn = _zx;
 		zyn = _zy;
 
-		// Euler test
+		// Euler version for testing
 		if (false){
 			_x   = xn + H* f(tn,xn,yn,zxn);
 			_zx = zxn + H*gx(tn,xn,yn,zxn);
@@ -473,8 +474,8 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 		_zy = zyn + (ly1/4.0);
 
     kx2 = H *  f(_t, _x, _y, _zx);
-    lx2 = H * gx(_t, _x, _y, _zx);
     ky2 = H *  f(_t, _x, _y, _zy);
+    lx2 = H * gx(_t, _x, _y, _zx);
     ly2 = H * gy(_t, _x, _y, _zy);
 
 		//========== K3 and L3 =================================
@@ -485,8 +486,8 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 		_zy = zyn + (3.0/32.0*ly1 + 9.0/32.0*ly2);
 
     kx3 = H *  f(_t, _x, _y, _zx);
-    lx3 = H * gx(_t, _x, _y, _zx);
     ky3 = H *  f(_t, _x, _y, _zy);
+    lx3 = H * gx(_t, _x, _y, _zx);
     ly3 = H * gy(_t, _x, _y, _zy);
 
 		//========== K4 and L4 =================================
@@ -497,8 +498,8 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 		_zy = zyn + (1932.0/2197.0*ly1 - 7200.0/2197.0*ly2 + 7296.0/2197.0*ly3);
 
     kx4 = H *  f(_t, _x, _y, _zx);
-    lx4 = H * gx(_t, _x, _y, _zx);
     ky4 = H *  f(_t, _x, _y, _zy);
+    lx4 = H * gx(_t, _x, _y, _zx);
     ly4 = H * gy(_t, _x, _y, _zy);
 
 		//========== K5 and L5 =================================
@@ -509,8 +510,8 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 		_zy = zyn + (439.0/216.0*ly1 - 8.0*ly2 + 3680.0/513.0*ly3 - 845.0/4104.0*ly4);
 
     kx5 = H *  f(_t, _x, _y, _zx);
-    lx5 = H * gx(_t, _x, _y, _zx);
     ky5 = H *  f(_t, _x, _y, _zy);
+    lx5 = H * gx(_t, _x, _y, _zx);
     ly5 = H * gy(_t, _x, _y, _zy);
 
 		//========== K6 and L6 =================================
@@ -521,10 +522,9 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 		_zy = zyn - (8.0/27.0*ly1 + 2.0*ly2 - 3544.0/2565.0*ly3 + 1859.0/4104.0*ly4 - 11.0/40.0*ly5);
 
     kx6 = H *  f(_t, _x, _y, _zx);
-    lx6 = H * gx(_t, _x, _y, _zx);
     ky6 = H *  f(_t, _x, _y, _zy);
+    lx6 = H * gx(_t, _x, _y, _zx);
     ly6 = H * gy(_t, _x, _y, _zy);
-
 
 		//========== Results for this iteration ==========
     _x  =  xn + (16.0/135.0*kx1 + 6656.0/12825.0*kx3 + 28561.0/56430.0*kx4 - 9.0/50.0*kx5 + 2.0/55.0*kx6);
@@ -581,16 +581,14 @@ int main (int argc, char **argv)
   *   y'(t)  =  f(t,x,y,zy) = zy
 	*/
 
-	//> Initial value of run
-	double x_init = X_1_INI;
-	double y_init = Y_1_INI;
-	double dx_init = 0.0;
-	double dy_init = 0.0;
+	//> Initial values of run
+	float x_init = X_1_INI;
+	float y_init = Y_1_INI;
+	float dx_init = 0.0;
+	float dy_init = 0.0;
 
 	// Print values of model
-	std::cout << "\nC = " << C << "\t";
-	std::cout << "R = " << R << "\t";
-	std::cout << "D = " << D << "\n";
+	std::cout << "\nC = " << C << "\tR = " << R << "\tD = " << D << "\n";
 	std::cout << "Magnet 1 at (" << X_1 << "," << Y_1 << ")\n";
 	std::cout << "Magnet 2 at (" << X_2 << "," << Y_2 << ")\n";
 	std::cout << "Magnet 3 at (" << X_3 << "," << Y_3 << ")\n";
@@ -603,7 +601,7 @@ int main (int argc, char **argv)
 	RungeKutta(x_init, dx_init, y_init, dy_init, MatPts, NB_INTERV);
 
   //--Fin Question 1-----------------------------------------------------
-
+  //---------------------------------------------------------------------
 
   //>Affichage des Points dans MatPict
   plot_point(MatPts,MatPict,(int)(NB_INTERV));
