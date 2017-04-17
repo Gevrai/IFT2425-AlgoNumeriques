@@ -1,6 +1,6 @@
 TP = Tp4-IFT2425
 
-all: 1 2 3
+all: 1 2
 
 1:
 	./compilegcc ${TP}-1
@@ -9,7 +9,3 @@ all: 1 2 3
 2:
 	./compilegcc ${TP}-2
 	./${TP}-2
-
-euler:
-	./compilegcc EulerTP1
-	./EulerTP1
