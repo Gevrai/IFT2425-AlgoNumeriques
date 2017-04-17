@@ -544,32 +544,32 @@ void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, fl
 //----------------------------------------------------------
 int main (int argc, char **argv)
 {
-  int i,j,k;
-  int flag_graph;
-  int zoom;
+	int i,j,k;
+	int flag_graph;
+	int zoom;
 
-  XEvent ev;
-  Window win_ppicture;
-  XImage *x_ppicture;
-  char   nomfen_ppicture[100];
-  char BufSystVisu[100];
+	XEvent ev;
+	Window win_ppicture;
+	XImage *x_ppicture;
+	char   nomfen_ppicture[100];
+	char BufSystVisu[100];
 
-  //>AllocMemory
-  float** MatPict=dmatrix_allocate_2d(HEIGHT,WIDTH);
-  float** MatPts=dmatrix_allocate_2d((int)(NB_INTERV),2);
+	//>AllocMemory
+	float** MatPict=dmatrix_allocate_2d(HEIGHT,WIDTH);
+	float** MatPts=dmatrix_allocate_2d((int)(NB_INTERV),2);
 
-  //>Init
-  for(i=0;i<HEIGHT;i++) for(j=0;j<WIDTH;j++) MatPict[i][j]=GREYWHITE;
-  for(i=0;i<2;i++) for(j=0;j<(int)(NB_INTERV);j++) MatPts[i][j]=0.0;
-  flag_graph=1;
-  zoom=1;
+	//>Init
+	for(i=0;i<HEIGHT;i++) for(j=0;j<WIDTH;j++) MatPict[i][j]=GREYWHITE;
+	for(i=0;i<2;i++) for(j=0;j<(int)(NB_INTERV);j++) MatPts[i][j]=0.0;
+	flag_graph=1;
+	zoom=1;
 
 
-  //---------------------------------------------------------------------
-  //>Question 1
-  //---------------------------------------------------------------------
+	//---------------------------------------------------------------------
+	//>Question 1
+	//---------------------------------------------------------------------
 
-  /* Extension des équations différentielles d'ordre 2 en un système
+	/* Extension des équations différentielles d'ordre 2 en un système
 	 * d'équations de 4 équations d'ordre 1 comme suit:
 	 *   x'(t)  = fx(t,x,y,zx) = zx
 	 *   zx'(t) = gx(t,x,y,zx) = 1/R * (-zx + sum - Cx)
@@ -596,52 +596,50 @@ int main (int argc, char **argv)
 	// The meat!
 	RungeKutta(x_init, dx_init, y_init, dy_init, MatPts, NB_INTERV);
 
-  //--Fin Question 1-----------------------------------------------------
-  //---------------------------------------------------------------------
+	//--Fin Question 1-----------------------------------------------------
+	//---------------------------------------------------------------------
 
-  //>Affichage des Points dans MatPict
-  plot_point(MatPts,MatPict,(int)(NB_INTERV));
+	//>Affichage des Points dans MatPict
+	plot_point(MatPts,MatPict,(int)(NB_INTERV));
 
-  //>Save&Visu de MatPict
-  SaveImagePgm((char*)OUTPUT_FILE,MatPict,HEIGHT,WIDTH);
-  strcpy(BufSystVisu,VIEW_PGM);
-  strcat(BufSystVisu," ");
-  strcat(BufSystVisu,OUTPUT_FILE);
-  strcat(BufSystVisu," &");
-  system(BufSystVisu);
+	//>Save&Visu de MatPict
+	SaveImagePgm((char*)OUTPUT_FILE,MatPict,HEIGHT,WIDTH);
+	strcpy(BufSystVisu,VIEW_PGM);
+	strcat(BufSystVisu," ");
+	strcat(BufSystVisu,OUTPUT_FILE);
+	strcat(BufSystVisu," &");
+	system(BufSystVisu);
 
-  //>Affiche Statistique
-  printf("\n\n Stat:  Xmin=[%.2f] Xmax=[%.2f] Ymin=[%.2f] Ymax=[%.2f]\n",Xmin,Xmax,Ymin,Ymax);
+	//>Affiche Statistique
+	printf("\n\n Stat:  Xmin=[%.2f] Xmax=[%.2f] Ymin=[%.2f] Ymax=[%.2f]\n",Xmin,Xmax,Ymin,Ymax);
 
 
- //--------------------------------------------------------------------------------
- //-------------- visu sous XWINDOW de l'évolution de MatPts ----------------------
- //--------------------------------------------------------------------------------
- if (flag_graph)
- {
- //>Uuverture Session Graphique
- if (open_display()<0) printf(" Impossible d'ouvrir une session graphique");
- sprintf(nomfen_ppicture,"Évolution du Graphe");
- win_ppicture=fabrique_window(nomfen_ppicture,10,10,HEIGHT,WIDTH,zoom);
- x_ppicture=cree_Ximage(MatPict,zoom,HEIGHT,WIDTH);
+	//--------------------------------------------------------------------------------
+	//-------------- visu sous XWINDOW de l'évolution de MatPts ----------------------
+	//--------------------------------------------------------------------------------
+	if (flag_graph) {
+		//>Ouverture Session Graphique
+		if (open_display()<0) printf(" Impossible d'ouvrir une session graphique");
+		sprintf(nomfen_ppicture,"Évolution du Graphe");
+		win_ppicture=fabrique_window(nomfen_ppicture,10,10,HEIGHT,WIDTH,zoom);
+		x_ppicture=cree_Ximage(MatPict,zoom,HEIGHT,WIDTH);
 
- printf("\n\n Pour quitter,appuyer sur la barre d'espace");
- fflush(stdout);
+		printf("\n\n Pour quitter,appuyer sur la barre d'espace");
+		fflush(stdout);
 
- //>Boucle Evolution
-  for(i=0;i<HEIGHT;i++) for(j=0;j<WIDTH;j++) MatPict[i][j]=GREYWHITE;
-  for(k=0;;)
-     {
-       k=((k+EVOL_GRAPH)%(int)(NB_INTERV));
-       Fill_Pict(MatPts,MatPict,k,(int)(NB_INTERV));
-       XDestroyImage(x_ppicture);
-       x_ppicture=cree_Ximage(MatPict,zoom,HEIGHT,WIDTH);
-       XPutImage(display,win_ppicture,gc,x_ppicture,0,0,0,0,x_ppicture->width,x_ppicture->height);
-       usleep(10000);  //si votre machine est lente mettre un nombre plus petit
-     }
- }
+		//>Boucle Evolution
+		for(i=0;i<HEIGHT;i++) for(j=0;j<WIDTH;j++) MatPict[i][j]=GREYWHITE;
+		for(k=0;;) {
+			k=((k+EVOL_GRAPH)%(int)(NB_INTERV));
+			Fill_Pict(MatPts,MatPict,k,(int)(NB_INTERV));
+			XDestroyImage(x_ppicture);
+			x_ppicture=cree_Ximage(MatPict,zoom,HEIGHT,WIDTH);
+			XPutImage(display,win_ppicture,gc,x_ppicture,0,0,0,0,x_ppicture->width,x_ppicture->height);
+			usleep(10000);  //si votre machine est lente mettre un nombre plus petit
+		}
+	}
 
- //>Retour
- printf("\n Fini... \n\n\n");
- return 0;
+	//>Retour
+	printf("\n Fini... \n\n\n");
+	return 0;
 }
