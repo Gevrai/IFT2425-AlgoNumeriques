@@ -715,20 +715,20 @@ int main (int argc, char **argv)
 
 	//>Init
 	for(k=0;k<TROIS;k++) for(i=0;i<HEIGHT;i++) for(j=0;j<WIDTH;j++) MatPict[k][i][j]=0;
-  for(i=0;i<2;i++) for(j=0;j<(int)(NB_INTERV);j++) MatPts[i][j]=0.0;
-  flag_graph=1;
-  zoom=1;
+	for(i=0;i<2;i++) for(j=0;j<(int)(NB_INTERV);j++) MatPts[i][j]=0.0;
+	flag_graph=1;
+	zoom=1;
 
 
-  //---------------------------------------------------------------------
-  //>Question 2
-  //---------------------------------------------------------------------
+	//---------------------------------------------------------------------
+	//>Question 2
+	//---------------------------------------------------------------------
 
 	// true pour l'image demandée dans l'énoncé,
 	// false pour l'image en couleur des bassins d'attractions
 	bool showConvergenceSpeed = true;
 
-  for(i=0;i<HEIGHT;i++){ for(j=0;j<WIDTH;j++) {
+	for(i=0;i<HEIGHT;i++){ for(j=0;j<WIDTH;j++) {
 
 			// Current progression
 			showProgressBar(i*HEIGHT + j, WIDTH*HEIGHT, 70);

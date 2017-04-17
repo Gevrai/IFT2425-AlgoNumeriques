@@ -394,21 +394,21 @@ void showProgressBar(int current, int total, int barWidth){
 }
 
 //   x'(t) and y'(t) = f(t,x,y,z) = z
-inline float f(float t, float x, float y, float z){
+inline double f(double t, double x, double y, double z){
 	return z;
 }
 
 //   zx'(t) = gx(t,x,y,z) = -R*zx + sum(x) - C*x
-inline float gx(float t, float x, float y, float z) {
-	float sum = ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+inline double gx(double t, double x, double y, double z) {
+	double sum = ((X_1-x) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((X_2-x) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
 		+ ((X_3-x) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
 	return (-R*z + sum - C*x);
 }
 
 //   zy'(t) = gy(t,x,y,z) = -R*zy + sum(y) - C*y
-inline float gy(float t, float x, float y, float z) {
-	float sum = ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
+inline double gy(double t, double x, double y, double z) {
+	double sum = ((Y_1-y) / pow(CARRE(X_1-x) + CARRE(Y_1-y) + CARRE(D), 3.0/2.0))
 		+ ((Y_2-y) / pow(CARRE(X_2-x) + CARRE(Y_2-y) + CARRE(D), 3.0/2.0))
 		+ ((Y_3-y) / pow(CARRE(X_3-x) + CARRE(Y_3-y) + CARRE(D), 3.0/2.0));
 	return (-R*z + sum - C*y);
@@ -421,7 +421,7 @@ inline float gy(float t, float x, float y, float z) {
  * This function fills the MatPts matrix with (x,y) values of the trajectory
  * computed with the Runge-Kutta method
  */
-void RungeKutta(float x_init, float dx_init, float y_init, float dy_init, float** MatPts, int nbIntervals){
+void RungeKutta(double x_init, double dx_init, double y_init, double dy_init, float** MatPts, int nbIntervals){
 
 	// For x and y
 	double kx1,kx2,kx3,kx4,kx5,kx6;
@@ -578,10 +578,10 @@ int main (int argc, char **argv)
 	 */
 
 	//> Initial values of run
-	float x_init = X_1_INI;
-	float y_init = Y_1_INI;
-	float dx_init = 0.0;
-	float dy_init = 0.0;
+	double x_init = X_1_INI;
+	double y_init = Y_1_INI;
+	double dx_init = 0.0;
+	double dy_init = 0.0;
 
 	// Print values of model
 	std::cout << "\nC = " << C << "\tR = " << R << "\tD = " << D << "\n";
