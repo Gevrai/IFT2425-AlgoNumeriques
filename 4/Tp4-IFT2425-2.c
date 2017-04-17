@@ -35,7 +35,8 @@ GC	  gc;
 //------------------------------------------------
 // DEFINITIONS -----------------------------------
 //------------------------------------------------
-#define CARRE(X) ((X)*(X))
+/* #define CARRE(X) ((X)*(X)) */
+#define CARRE(X) (pow((X),2))
 
 #define OUTPUT_FILE "Tp4-Img-II"
 #define VIEW_PGM    "xv"
@@ -48,8 +49,8 @@ GC	  gc;
 #define Y_1 1.0
 #define X_2 -1.0/sqrt(2.0)
 #define Y_2 -1.0/2.0
-#define X_3 +1.0/sqrt(2.0)
-/* #define X_3 +1.0/2*sqrt(2.0) */
+/* #define X_3 +1.0/sqrt(2.0) */
+#define X_3 +1.0/2*sqrt(2.0)
 #define Y_3 -1.0/2.0
 
 #define C 0.25
@@ -60,8 +61,7 @@ GC	  gc;
 //-Cst-Runge-Kutta
 #define H            0.1
 #define T_0          0.0
-#define T_F          25.0
-/* #define T_F          20.0 */
+#define T_F          20.0
 #define NB_INTERV (T_F-T_0)/H
 
  //-Cst-Image
@@ -482,9 +482,7 @@ void Fill_Pict(float** MatPts,float** MatPict,int PtsNumber,int NbPts)
 
 // Util function showing a progress bar on screen, prints only when there is a change
 int lastProgress = -1;
-void resetProgressBar(){lastProgress = -1;}
-
-void showProgressBar(int current, int total, int barWidth){
+inline void showProgressBar(int current, int total, int barWidth){
 	float progress = (float)current/(float)(total-1);
 	//Don't reprint if not necessary
 	if (lastProgress == (int)(progress*100))
@@ -509,9 +507,22 @@ void showProgressBar(int current, int total, int barWidth){
 }
 
 // Recalibrate the image in MatPict between new min/max values (normally 0..255)
-void recalibrateImgRGB(float imgMin, float imgMax, float newMin, float newMax, float*** MatPict){
-	for(int i=0;i<HEIGHT;i++) for(int j=0;j<WIDTH;j++) for (int k=0;k<3;k++)
-				MatPict[k][i][j] = newMin + (newMax-newMin) * (MatPict[k][i][j]-imgMin)/(imgMax-imgMin);
+// and gamma for Gamma correction ratio
+void recalibrateImgRGB(float newMin, float newMax, float*** MatPict, float gamma){
+	float min = MatPict[0][0][0];
+	float max = MatPict[0][0][0];
+	// Find current min and max
+	for(int i=0;i<HEIGHT;i++) for(int j=0;j<WIDTH;j++) for (int k=0;k<3;k++){
+				float value = MatPict[k][i][j];
+				if (value > max) max = value;
+				if (value < min) min = value;
+			}
+	// Recalibration of image intensity range: [min,max] => [newMin,newMax]
+	for(int i=0;i<HEIGHT;i++) for(int j=0;j<WIDTH;j++) for (int k=0;k<3;k++){
+				float calibratedBetweenZeroAndOne = (MatPict[k][i][j]-min)/(max-min);
+				float gammaCorrection = pow(calibratedBetweenZeroAndOne, gamma);
+				MatPict[k][i][j] = newMin + (newMax-newMin) * gammaCorrection;
+			}
 }
 
 //   x'(t) and y'(t) = f(t,x,y,z) = z
@@ -535,12 +546,17 @@ inline double gy(double t, double x, double y, double z) {
 	return (-R*z + sum - C*y);
 }
 
-inline int isCloseToAMagnet(double x, double y, double distanceMax){
-	if (sqrt(CARRE(X_1-x) + CARRE(Y_1-y)) < distanceMax)
+// Simple absolute value function, seems not to be on DIRO's librairy weirdly...
+inline double _abs(double x){ return (x<0)? -x:x;}
+
+// Check if the L1-norm between (x,y) and any of the magnet is smaller than distanceMax,
+// if it is returns the magnet number, else returns 0
+inline int isCloseToAMagnet_L1norm(double x, double y, double distanceMax){
+	if ( _abs(X_1 - x) + _abs(Y_1 - y) < distanceMax)
 			return 1;
-	if (sqrt(CARRE(X_2-x) + CARRE(Y_2-y)) < distanceMax)
+	if ( _abs(X_2 - x) + _abs(Y_2 - y) < distanceMax)
 		return 2;
-	if (sqrt(CARRE(X_3-x) + CARRE(Y_3-y)) < distanceMax)
+	if ( _abs(X_3 - x) + _abs(Y_3 - y) < distanceMax)
 		return 3;
 	return 0;
 }
@@ -570,7 +586,7 @@ int RungeKutta(double x_init, double dx_init, double y_init, double dy_init, int
   _zx = dx_init;
   _zy = dy_init;
 
-  for(int i=1;i<(int)(nbIntervals);i+=1) {
+  for(int i=1;i<nbIntervals;++i) {
 
 		// Initialize this iteration
     tn = H * i;
@@ -579,90 +595,100 @@ int RungeKutta(double x_init, double dx_init, double y_init, double dy_init, int
 		zxn = _zx;
 		zyn = _zy;
 
+		// Euler version for testing
+		if (false){
+			_x   = xn + H* f(tn,xn,yn,zxn);
+			_zx = zxn + H*gx(tn,xn,yn,zxn);
+			_y   = yn + H* f(tn,xn,yn,zyn);
+			_zy = zyn + H*gy(tn,xn,yn,zyn);
+			continue;
+		}
+
 		//========== K1 and L1 =================================
-    kx1 = H * f (tn,xn,yn,zxn);
+    kx1 = H *  f(tn,xn,yn,zxn);
     lx1 = H * gx(tn,xn,yn,zxn);
-    ky1 = H * f (tn,xn,yn,zyn);
+    ky1 = H *  f(tn,xn,yn,zyn);
     ly1 = H * gy(tn,xn,yn,zyn);
 
 		//========== K2 and L2 =================================
-		_t  =  tn + H/4.0;
-		_x  =  xn + kx1/4.0;
-		_y  =  yn + ky1/4.0;
-		_zx = zxn + lx1/4.0;
-		_zy = zyn + ly1/4.0;
+		_t  =  tn + (H/4.0);
+		_x  =  xn + (kx1/4.0);
+		_y  =  yn + (ky1/4.0);
+		_zx = zxn + (lx1/4.0);
+		_zy = zyn + (ly1/4.0);
 
-    kx2 = H * f(_t, _x, _y, _zx);
-    lx2 = H *gx(_t, _x, _y, _zx);
-    ky2 = H * f(_t, _x, _y, _zy);
-    ly2 = H *gy(_t, _x, _y, _zy);
+    kx2 = H *  f(_t, _x, _y, _zx);
+    ky2 = H *  f(_t, _x, _y, _zy);
+    lx2 = H * gx(_t, _x, _y, _zx);
+    ly2 = H * gy(_t, _x, _y, _zy);
 
 		//========== K3 and L3 =================================
 		_t  =  tn + H*(3.0/8.0);
-		_x  =  xn + 3.0/32.0*kx1 + 9.0/32.0*kx2;
-		_y  =  yn + 3.0/32.0*ky1 + 9.0/32.0*ky2;
-		_zx = zxn + 3.0/32.0*lx1 + 9.0/32.0*lx2;
-		_zy = zyn + 3.0/32.0*ly1 + 9.0/32.0*ly2;
+		_x  =  xn + (3.0/32.0*kx1 + 9.0/32.0*kx2);
+		_y  =  yn + (3.0/32.0*ky1 + 9.0/32.0*ky2);
+		_zx = zxn + (3.0/32.0*lx1 + 9.0/32.0*lx2);
+		_zy = zyn + (3.0/32.0*ly1 + 9.0/32.0*ly2);
 
-    kx3 = H * f(_t, _x, _y, _zx);
-    lx3 = H *gx(_t, _x, _y, _zx);
-    ky3 = H * f(_t, _x, _y, _zy);
-    ly3 = H *gy(_t, _x, _y, _zy);
+    kx3 = H *  f(_t, _x, _y, _zx);
+    ky3 = H *  f(_t, _x, _y, _zy);
+    lx3 = H * gx(_t, _x, _y, _zx);
+    ly3 = H * gy(_t, _x, _y, _zy);
 
 		//========== K4 and L4 =================================
 		_t  =  tn + H*(12.0/13.0);
-		_x  =  xn + 1932.0/2197.0*kx1 - 7200.0/2197.0*kx2 + 7296.0/2197.0*kx3;
-		_y  =  yn + 1932.0/2197.0*ky1 - 7200.0/2197.0*ky2 + 7296.0/2197.0*ky3;
-		_zx = zxn + 1932.0/2197.0*lx1 - 7200.0/2197.0*lx2 + 7296.0/2197.0*lx3;
-		_zy = zyn + 1932.0/2197.0*ly1 - 7200.0/2197.0*ly2 + 7296.0/2197.0*ly3;
+		_x  =  xn + (1932.0/2197.0*kx1 - 7200.0/2197.0*kx2 + 7296.0/2197.0*kx3);
+		_y  =  yn + (1932.0/2197.0*ky1 - 7200.0/2197.0*ky2 + 7296.0/2197.0*ky3);
+		_zx = zxn + (1932.0/2197.0*lx1 - 7200.0/2197.0*lx2 + 7296.0/2197.0*lx3);
+		_zy = zyn + (1932.0/2197.0*ly1 - 7200.0/2197.0*ly2 + 7296.0/2197.0*ly3);
 
-    kx4 = H * f(_t, _x, _y, _zx);
-    lx4 = H *gx(_t, _x, _y, _zx);
-    ky4 = H * f(_t, _x, _y, _zy);
-    ly4 = H *gy(_t, _x, _y, _zy);
+    kx4 = H *  f(_t, _x, _y, _zx);
+    ky4 = H *  f(_t, _x, _y, _zy);
+    lx4 = H * gx(_t, _x, _y, _zx);
+    ly4 = H * gy(_t, _x, _y, _zy);
 
 		//========== K5 and L5 =================================
 		_t  =  tn + H;
-		_x  =  xn + 439.0/216.0*kx1 - 8.0*kx2 + 3680.0/513.0*kx3 - 845.0/4104.0*kx4;
-		_y  =  yn + 439.0/216.0*ky1 - 8.0*ky2 + 3680.0/513.0*ky3 - 845.0/4104.0*ky4;
-		_zx = zxn + 439.0/216.0*lx1 - 8.0*lx2 + 3680.0/513.0*lx3 - 845.0/4104.0*lx4;
-		_zy = zyn + 439.0/216.0*ly1 - 8.0*ly2 + 3680.0/513.0*ly3 - 845.0/4104.0*ly4;
+		_x  =  xn + (439.0/216.0*kx1 - 8.0*kx2 + 3680.0/513.0*kx3 - 845.0/4104.0*kx4);
+		_y  =  yn + (439.0/216.0*ky1 - 8.0*ky2 + 3680.0/513.0*ky3 - 845.0/4104.0*ky4);
+		_zx = zxn + (439.0/216.0*lx1 - 8.0*lx2 + 3680.0/513.0*lx3 - 845.0/4104.0*lx4);
+		_zy = zyn + (439.0/216.0*ly1 - 8.0*ly2 + 3680.0/513.0*ly3 - 845.0/4104.0*ly4);
 
-    kx5 = H * f(_t, _x, _y, _zx);
-    lx5 = H *gx(_t, _x, _y, _zx);
-    ky5 = H * f(_t, _x, _y, _zy);
-    ly5 = H *gy(_t, _x, _y, _zy);
+    kx5 = H *  f(_t, _x, _y, _zx);
+    ky5 = H *  f(_t, _x, _y, _zy);
+    lx5 = H * gx(_t, _x, _y, _zx);
+    ly5 = H * gy(_t, _x, _y, _zy);
 
 		//========== K6 and L6 =================================
 		_t  =  tn + H/2.0;
-		_x  =  xn - 8.0/27.0*kx1 + 2.0*kx2 - 3544.0/2565.0*kx3 + 1859.0/4104.0*kx4 - 11.0/40.0*kx5;
-		_y  =  yn - 8.0/27.0*ky1 + 2.0*ky2 - 3544.0/2565.0*ky3 + 1859.0/4104.0*ky4 - 11.0/40.0*ky5;
-		_zx = zxn - 8.0/27.0*lx1 + 2.0*lx2 - 3544.0/2565.0*lx3 + 1859.0/4104.0*lx4 - 11.0/40.0*lx5;
-		_zy = zxn - 8.0/27.0*ly1 + 2.0*ly2 - 3544.0/2565.0*ly3 + 1859.0/4104.0*ly4 - 11.0/40.0*ly5;
+		_x  =  xn + (-8.0/27.0*kx1 + 2.0*kx2 - 3544.0/2565.0*kx3 + 1859.0/4104.0*kx4 - 11.0/40.0*kx5);
+		_y  =  yn + (-8.0/27.0*ky1 + 2.0*ky2 - 3544.0/2565.0*ky3 + 1859.0/4104.0*ky4 - 11.0/40.0*ky5);
+		_zx = zxn + (-8.0/27.0*lx1 + 2.0*lx2 - 3544.0/2565.0*lx3 + 1859.0/4104.0*lx4 - 11.0/40.0*lx5);
+		_zy = zyn + (-8.0/27.0*ly1 + 2.0*ly2 - 3544.0/2565.0*ly3 + 1859.0/4104.0*ly4 - 11.0/40.0*ly5);
 
-    kx6 = H * f(_t, _x, _y, _zx);
-    lx6 = H *gx(_t, _x, _y, _zx);
-    ky6 = H * f(_t, _x, _y, _zy);
-    ly6 = H *gy(_t, _x, _y, _zy);
+    kx6 = H *  f(_t, _x, _y, _zx);
+    ky6 = H *  f(_t, _x, _y, _zy);
+    lx6 = H * gx(_t, _x, _y, _zx);
+    ly6 = H * gy(_t, _x, _y, _zy);
 
 		//========== Results for this iteration ==========
     _x  =  xn + (16.0/135.0*kx1 + 6656.0/12825.0*kx3 + 28561.0/56430.0*kx4 - 9.0/50.0*kx5 + 2.0/55.0*kx6);
-    _zx = zxn + (16.0/135.0*lx1 + 6656.0/12825.0*lx3 + 28561.0/56430.0*lx4 - 9.0/50.0*lx5 + 2.0/55.0*lx6);
     _y  =  yn + (16.0/135.0*ky1 + 6656.0/12825.0*ky3 + 28561.0/56430.0*ky4 - 9.0/50.0*ky5 + 2.0/55.0*ky6);
+    _zx = zxn + (16.0/135.0*lx1 + 6656.0/12825.0*lx3 + 28561.0/56430.0*lx4 - 9.0/50.0*lx5 + 2.0/55.0*lx6);
     _zy = zyn + (16.0/135.0*ly1 + 6656.0/12825.0*ly3 + 28561.0/56430.0*ly4 - 9.0/50.0*ly5 + 2.0/55.0*ly6);
 
-		if(int magnet = isCloseToAMagnet(_x, _y, distance_forConvergence)){
+		if(int magnet = isCloseToAMagnet_L1norm(_x, _y, distance_forConvergence)){
 			counter_forConvergence++;
 			if(counter_forConvergence >= nbIntervals_forConvergence){
-				// For nb of iterations needed for convergence
-				if (returnNumberOfIterations) return i;
-				// For magnet we landed on -> 1,2 or 3
-				else return magnet;
+				// Nb of iterations needed for convergence OR Magnet we landed on -> 1,2 or 3
+				return returnNumberOfIterations? i:magnet;
 			}
-		} else counter_forConvergence = 0;
+		}
+		else
+			counter_forConvergence = 0;
   }
-	if (returnNumberOfIterations) return nbIntervals;
-	else return 0;
+
+	// If we didn't converge
+	return returnNumberOfIterations? nbIntervals:0;
 }
 
 //----------------------------------------------------------
@@ -700,36 +726,26 @@ int main (int argc, char **argv)
 	// true for image asked in assignment, false for colorized attraction field
 	bool showConvergenceSpeed = true;
 
-	// Variables for image recalibration
-	float min = MatPict[0][0][0];
-	float max = MatPict[0][0][0];
-
   for(i=0;i<HEIGHT;i++){
 		for(j=0;j<WIDTH;j++) {
 			showProgressBar(i*HEIGHT + j, WIDTH*HEIGHT, 70);
 
 			// Current x and y
-			float x = Xmin + (float)j/WIDTH * (Xmax - Xmin);
-			float y = Ymax - (float)i/HEIGHT * (Ymax - Ymin);
+			double x = Xmin + (float)j/WIDTH * (Xmax - Xmin);
+			double y = Ymax - (float)i/HEIGHT * (Ymax - Ymin);
 
 			// Image de la vitesse de convergence, version demandee dans l'enonce
 			if (showConvergenceSpeed){
-				// Shade between 0 and 255, with 0 being a fast convergence
-				int nbinterv = RungeKutta(x,0.0,y,0.0,NB_INTERV,showConvergenceSpeed);
+				int nbinterv = RungeKutta(x,0.0,y,0.0 ,NB_INTERV,true);
 				float value = (float)nbinterv;
 				MatPict[0][i][j]=value;
 				MatPict[1][i][j]=value;
 				MatPict[2][i][j]=value;
-				// For calibration
-				if (value > max)
-					max = value;
-				if (value < min)
-					min = value;
 			}
 
-			// Image des bassins d'attraction
+			// Image des bassins d'attraction avec couleur!
 			else {
-				int magnet = RungeKutta(x,0.0,y,0.0,NB_INTERV, showConvergenceSpeed);
+				int magnet = RungeKutta(x,0.0,y,0.0,NB_INTERV,false);
 				if(magnet == 1)
 					MatPict[0][i][j]=255;
 				if(magnet == 2)
@@ -742,7 +758,7 @@ int main (int argc, char **argv)
 
 	// Image recalibration
 	if (showConvergenceSpeed)
-		recalibrateImgRGB(min, max, 0.0, 255.0, MatPict);
+		recalibrateImgRGB(0.0, 255.0, MatPict, 1.0);
 
 
    //--Fin Question 2-----------------------------------------------------
