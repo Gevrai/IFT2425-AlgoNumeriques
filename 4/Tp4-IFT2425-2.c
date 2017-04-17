@@ -507,11 +507,10 @@ inline void showProgressBar(int current, int total, int barWidth){
 }
 
 // Recalibrate the image in MatPict between new min/max values (normally 0..255)
-// and gamma for Gamma correction ratio
-void recalibrateImgRGB(float newMin, float newMax, float*** MatPict, float gamma){
+void recalibrateImgRGB(float newMin, float newMax, float*** MatPict){
 	float min = MatPict[0][0][0];
 	float max = MatPict[0][0][0];
-	// Find current min and max
+	// Find current min and max in MatPict
 	for(int i=0;i<HEIGHT;i++) for(int j=0;j<WIDTH;j++) for (int k=0;k<3;k++){
 				float value = MatPict[k][i][j];
 				if (value > max) max = value;
@@ -520,8 +519,7 @@ void recalibrateImgRGB(float newMin, float newMax, float*** MatPict, float gamma
 	// Recalibration of image intensity range: [min,max] => [newMin,newMax]
 	for(int i=0;i<HEIGHT;i++) for(int j=0;j<WIDTH;j++) for (int k=0;k<3;k++){
 				float calibratedBetweenZeroAndOne = (MatPict[k][i][j]-min)/(max-min);
-				float gammaCorrection = pow(calibratedBetweenZeroAndOne, gamma);
-				MatPict[k][i][j] = newMin + (newMax-newMin) * gammaCorrection;
+				MatPict[k][i][j] = newMin + (newMax-newMin) * calibratedBetweenZeroAndOne;
 			}
 }
 
@@ -546,7 +544,7 @@ inline double gy(double t, double x, double y, double z) {
 	return (-R*z + sum - C*y);
 }
 
-// Simple absolute value function, seems not to be on DIRO's librairy weirdly...
+// Simple absolute value function, seems not to be on DIRO's <math> library weirdly...
 inline double _abs(double x){ return (x<0)? -x:x;}
 
 // Check if the L1-norm between (x,y) and any of the magnet is smaller than distanceMax,
@@ -566,7 +564,7 @@ inline int isCloseToAMagnet_L1norm(double x, double y, double distanceMax){
  * MatPts[k][1] -> y axis
  *
  * This function fills the MatPts matrix with (x,y) values of the trajectory
- * computed with the Runge-Kutta method
+ * computed with the Runge-Kutta method (Euler is available for debugging)
  */
 int RungeKutta(double x_init, double dx_init, double y_init, double dy_init, int nbIntervals, bool returnNumberOfIterations){
 
@@ -595,7 +593,7 @@ int RungeKutta(double x_init, double dx_init, double y_init, double dy_init, int
 		zxn = _zx;
 		zyn = _zy;
 
-		// Euler version for testing
+		// Euler version for debugging
 		if (false){
 			_x   = xn + H* f(tn,xn,yn,zxn);
 			_zx = zxn + H*gx(tn,xn,yn,zxn);
@@ -723,11 +721,13 @@ int main (int argc, char **argv)
   //>Question 2
   //---------------------------------------------------------------------
 
-	// true for image asked in assignment, false for colorized attraction field
+	// true pour l'image demandée dans l'énoncé,
+	// false pour l'image en couleur des bassins d'attractions
 	bool showConvergenceSpeed = true;
 
-  for(i=0;i<HEIGHT;i++){
-		for(j=0;j<WIDTH;j++) {
+  for(i=0;i<HEIGHT;i++){ for(j=0;j<WIDTH;j++) {
+
+			// Current progression
 			showProgressBar(i*HEIGHT + j, WIDTH*HEIGHT, 70);
 
 			// Current x and y
@@ -738,27 +738,25 @@ int main (int argc, char **argv)
 			if (showConvergenceSpeed){
 				int nbinterv = RungeKutta(x,0.0,y,0.0 ,NB_INTERV,true);
 				float value = (float)nbinterv;
-				MatPict[0][i][j]=value;
-				MatPict[1][i][j]=value;
-				MatPict[2][i][j]=value;
+				MatPict[0][i][j] = value;
+				MatPict[1][i][j] = value;
+				MatPict[2][i][j] = value;
 			}
 
 			// Image des bassins d'attraction avec couleur!
 			else {
 				int magnet = RungeKutta(x,0.0,y,0.0,NB_INTERV,false);
-				if(magnet == 1)
-					MatPict[0][i][j]=255;
-				if(magnet == 2)
-					MatPict[1][i][j]=255;
-				if(magnet == 3)
-					MatPict[2][i][j]=255;
+				if(magnet == 1) MatPict[0][i][j] = 255.0;
+				if(magnet == 2) MatPict[1][i][j] = 255.0;
+				if(magnet == 3) MatPict[2][i][j] = 255.0;
 			}
+
 		}
 	}
 
 	// Image recalibration
 	if (showConvergenceSpeed)
-		recalibrateImgRGB(0.0, 255.0, MatPict, 1.0);
+		recalibrateImgRGB(0.0, 255.0, MatPict);
 
 
    //--Fin Question 2-----------------------------------------------------
