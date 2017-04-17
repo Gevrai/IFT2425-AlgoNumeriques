@@ -569,17 +569,13 @@ int main (int argc, char **argv)
   //>Question 1
   //---------------------------------------------------------------------
 
-  /* Résolution de l'équation différentielle d'ordre 2 selon Runge-Kutta
-  *   x'(t)  = f(t, x(t), y(t), zx(t))
-  *   zx'(t) = gx(t, x(t), y(t), zx(t))
-  *   y'(t)  = f(t, x(t), y(t), zy(t))
-  *   zy'(t) = gy(t, x(t), y(t), zy(t))
-  * qui devient ainsi
-  *   zx'(t) = gx(t,x,y,zx) = 1/R * (-zx + sum - Cx)
-  *   x'(t)  =  f(t,x,y,zx) = zx
-  *   zy'(t) = gy(t,x,y,zy) = 1/R * (-zy + sum - Cy)
-  *   y'(t)  =  f(t,x,y,zy) = zy
-	*/
+  /* Extension des équations différentielles d'ordre 2 en un système
+	 * d'équations de 4 équations d'ordre 1 comme suit:
+	 *   x'(t)  = fx(t,x,y,zx) = zx
+	 *   zx'(t) = gx(t,x,y,zx) = 1/R * (-zx + sum - Cx)
+	 *   y'(t)  = fy(t,x,y,zy) = zy
+	 *   zy'(t) = gy(t,x,y,zy) = 1/R * (-zy + sum - Cy)
+	 */
 
 	//> Initial values of run
 	float x_init = X_1_INI;
